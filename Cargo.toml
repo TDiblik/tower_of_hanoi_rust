@@ -1,0 +1,11 @@
+[package]
+name = "tower_of_hanoi_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ratatui = "0.20.1"
+crossterm = { version = "0.26" }
+crossterm_input = "0.5.0"
