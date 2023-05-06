@@ -11,7 +11,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, Borders},
+    widgets::Block,
     Frame, Terminal,
 };
 use std::{error::Error, io};
@@ -53,7 +53,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                 return Ok(());
             }
 
-            if key.kind == KeyEventKind::Release {
+            if key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Left => game.point_to_previous(),
                     KeyCode::Right => game.point_to_next(),
@@ -71,45 +71,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
         .split(f.size());
 
     // Render towers
-    let tower_chunks = Layout::default()
+    let tower_container_constraints = [
+        Constraint::Percentage(5),
+        Constraint::Percentage(30),
+        Constraint::Percentage(30),
+        Constraint::Percentage(30),
+        Constraint::Percentage(5),
+    ];
+    let tower_container_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage(5),
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
-                Constraint::Percentage(5),
-            ]
-            .as_ref(),
-        )
+        .constraints(tower_container_constraints.as_ref())
         .split(overlay[0]);
 
-    let tower_block = Block::default().borders(Borders::ALL);
-    f.render_widget(tower_block, tower_chunks[1]);
+    game.left_tower.render(f, &tower_container_chunks);
+    game.middle_tower.render(f, &tower_container_chunks);
+    game.right_tower.render(f, &tower_container_chunks);
 
-    let tower_block = Block::default().borders(Borders::ALL);
-    f.render_widget(tower_block, tower_chunks[2]);
-
-    let tower_block = Block::default().borders(Borders::ALL);
-    f.render_widget(tower_block, tower_chunks[3]);
-
-    // Render pointer
+    // Render pointer to towers
     let pointer_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage(5),
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
-                Constraint::Percentage(30),
-                Constraint::Percentage(5),
-            ]
-            .as_ref(),
-        )
+        .constraints(tower_container_constraints.as_ref())
         .split(overlay[1]);
 
-    // Top right inner block with styled title aligned to the right
     let pointing_block = Block::default()
         .title(Span::styled(
             "^",
@@ -120,6 +103,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
         .title_alignment(Alignment::Center);
     f.render_widget(
         pointing_block,
-        pointer_chunks[1 + game.pointing_to_tower as usize],
+        pointer_chunks[game.pointing_to_tower.into_game_index()],
     );
 }
