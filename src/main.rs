@@ -8,10 +8,10 @@ use crossterm::{
 use game::Game;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::Block,
+    widgets::{Block, Borders, Clear, Paragraph},
     Frame, Terminal,
 };
 use std::{error::Error, io};
@@ -49,14 +49,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
         terminal.draw(|f| ui(f, &game))?;
 
         if let Event::Key(key) = event::read()? {
+            // Universal keys
             match key.code {
                 KeyCode::Char('q') => {
                     return Ok(());
                 }
-                KeyCode::Char('r') => game = Game::new(),
+                KeyCode::Char('r') | KeyCode::Char('R') => game = Game::new(),
                 _ => {}
             }
 
+            // Game keys
             if key.kind == KeyEventKind::Press && !game.is_finished {
                 match key.code {
                     KeyCode::Left => game.point_to_previous(),
@@ -73,10 +75,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
+    let f_size = f.size();
+
     let overlay = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(90), Constraint::Percentage(10)])
-        .split(f.size());
+        .split(f_size);
 
     // Render towers
     let tower_container_constraints = [
@@ -113,4 +117,60 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
         pointing_block,
         pointer_chunks[game.pointing_to_tower.into_game_index()],
     );
+
+    // Helper menu
+    let helper_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(95), Constraint::Percentage(5)])
+        .split(f_size);
+
+    let helper_text = Paragraph::new(Span::styled(
+        "R => Restart ; Q => Quit",
+        Style::default().add_modifier(Modifier::SLOW_BLINK),
+    ))
+    .alignment(Alignment::Right);
+    f.render_widget(helper_text, helper_chunks[1]);
+
+    // Win popup
+    if game.is_finished {
+        let popup_block = Block::default().title("You win!").borders(Borders::ALL);
+        let popup_area = centered_rect(60, 20, f_size);
+        f.render_widget(Clear, popup_area);
+        f.render_widget(popup_block, popup_area);
+
+        let popup_text = Paragraph::new(Span::styled(
+            "Congratulations! Press Q to quit or R to restart.",
+            Style::default().add_modifier(Modifier::BOLD),
+        ))
+        .alignment(Alignment::Center);
+        let popup_text_area = centered_rect(60, 20, popup_area);
+
+        f.render_widget(popup_text, popup_text_area);
+    }
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let center_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(center_layout[1])[1]
 }
