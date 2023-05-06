@@ -8,6 +8,7 @@ use ratatui::{
     Frame,
 };
 
+#[derive(Clone)]
 pub struct Game {
     pub left_tower: Tower,
     pub middle_tower: Tower,
@@ -59,8 +60,19 @@ impl Game {
     pub fn change_selection(&mut self) {
         match self.last_selected_tower {
             Some(last_selection) => {
+                let mut game_cloned = self.clone();
+                let current_tower = game_cloned.tower_enum_to_ref(game_cloned.pointing_to_tower);
+
                 let last_selected_tower = self.tower_enum_to_ref(last_selection);
                 let top_disck = last_selected_tower.discks.pop_front().unwrap();
+
+                if let Some(current_front) = current_tower.discks.front() {
+                    if current_front.width_percent < top_disck.width_percent {
+                        last_selected_tower.discks.push_front(top_disck);
+                        self.last_selected_tower = None;
+                        return;
+                    }
+                }
 
                 let current_tower = self.tower_enum_to_ref(self.pointing_to_tower);
                 current_tower.discks.push_front(top_disck);
@@ -110,6 +122,7 @@ impl Game {
     }
 }
 
+#[derive(Clone)]
 pub struct Tower {
     position: PossibleTowers,
     discks: VecDeque<TowerDisck>,
@@ -194,10 +207,10 @@ impl Tower {
     }
 }
 
+#[derive(Clone)]
 pub struct TowerDisck {
     width_percent: u16,
 }
-
 impl TowerDisck {
     pub fn new(width_percent: u16) -> Self {
         assert!(
@@ -214,7 +227,6 @@ pub enum PossibleTowers {
     Middle = 1,
     Right = 2,
 }
-
 impl PossibleTowers {
     pub fn into_game_index(self) -> usize {
         1 + self as usize

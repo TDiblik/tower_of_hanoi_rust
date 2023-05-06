@@ -125,7 +125,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
         .split(f_size);
 
     let helper_text = Paragraph::new(Span::styled(
-        "R => Restart ; Q => Quit",
+        "L/R Arrow => move ; Enter => Select ; R => Restart ; Q => Quit",
         Style::default().add_modifier(Modifier::SLOW_BLINK),
     ))
     .alignment(Alignment::Right);
