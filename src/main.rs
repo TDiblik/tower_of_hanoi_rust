@@ -49,14 +49,22 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
         terminal.draw(|f| ui(f, &game))?;
 
         if let Event::Key(key) = event::read()? {
-            if key.code == KeyCode::Char('q') {
-                return Ok(());
+            match key.code {
+                KeyCode::Char('q') => {
+                    return Ok(());
+                }
+                KeyCode::Char('r') => game = Game::new(),
+                _ => {}
             }
 
-            if key.kind == KeyEventKind::Press {
+            if key.kind == KeyEventKind::Press && !game.is_finished {
                 match key.code {
                     KeyCode::Left => game.point_to_previous(),
                     KeyCode::Right => game.point_to_next(),
+                    KeyCode::Enter => {
+                        game.change_selection();
+                        game.check_win_conditions();
+                    }
                     _ => (),
                 }
             }
@@ -83,9 +91,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
         .constraints(tower_container_constraints.as_ref())
         .split(overlay[0]);
 
-    game.left_tower.render(f, &tower_container_chunks);
-    game.middle_tower.render(f, &tower_container_chunks);
-    game.right_tower.render(f, &tower_container_chunks);
+    game.left_tower.render(f, game, &tower_container_chunks);
+    game.middle_tower.render(f, game, &tower_container_chunks);
+    game.right_tower.render(f, game, &tower_container_chunks);
 
     // Render pointer to towers
     let pointer_chunks = Layout::default()
