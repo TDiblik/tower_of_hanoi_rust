@@ -143,7 +143,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, game: &Game) {
             Style::default().add_modifier(Modifier::BOLD),
         ))
         .alignment(Alignment::Center);
-        let popup_text_area = centered_rect(60, 20, popup_area);
+        let popup_text_area = centered_rect(90, 20, popup_area);
 
         f.render_widget(popup_text, popup_text_area);
     }
