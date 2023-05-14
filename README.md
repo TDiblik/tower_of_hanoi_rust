@@ -6,4 +6,8 @@
 
 [![Showcase Video](./showcase_win.png)](./showcase.mp4)
 
-## [Showcase video](./showcase.mp4)
+## Showcase gif (horrible quality)
+
+[![Showcase gif](./showcase.gif)](./showcase.gif)
+
+## [Showcase video (good quality)](./showcase.mp4)
